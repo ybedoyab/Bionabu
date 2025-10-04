@@ -1,6 +1,8 @@
 import React from 'react';
 import { ResearchProvider, useResearch } from './context/ResearchContext';
-import Header from './components/Header';
+import Navbar from './components/layout/Navbar';
+import HeroSection from './components/layout/HeroSection';
+import Footer from './components/layout/Footer';
 import ResearchQuery from './components/ResearchQuery';
 import ArticleRecommendations from './components/ArticleRecommendations';
 import ArticleSummaries from './components/ArticleSummaries';
@@ -43,6 +45,16 @@ const AppContent = () => {
     }
   };
 
+  // Handle category selection from HeroSection
+  const handleCategorySelect = (query) => {
+    handleGetRecommendations(query);
+  };
+
+  // Handle going back to home
+  const handleGoHome = () => {
+    resetResearch();
+  };
+
   // Handle getting summaries
   const handleGetSummaries = async (articles, query) => {
     try {
@@ -82,100 +94,110 @@ const AppContent = () => {
     switch (currentStep) {
       case 'research-query':
         return (
-          <ResearchQuery
-            onGetRecommendations={handleGetRecommendations}
-            isLoading={isLoading}
-          />
+          <div className="min-h-screen flex flex-col relative">
+            {/* Content */}
+            <div className="relative z-10 flex flex-col min-h-screen">
+              <Navbar />
+              <HeroSection 
+                onSearch={handleGetRecommendations}
+                onCategorySelect={handleCategorySelect}
+              />
+            </div>
+          </div>
         );
 
       case 'recommendations':
         return (
-          <ArticleRecommendations
-            recommendations={recommendations}
-            onSelectArticle={selectArticle}
-            onDeselectArticle={deselectArticle}
-            onGetSummaries={handleGetSummaries}
-            selectedArticles={selectedArticles}
-            researchQuery={researchQuery}
-            isLoading={isLoading}
-          />
+          <div className="min-h-screen bg-base-100">
+            <Navbar showHomeButton={true} onHomeClick={handleGoHome} />
+            <main className="py-8">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <ArticleRecommendations
+                  recommendations={recommendations}
+                  onSelectArticle={selectArticle}
+                  onDeselectArticle={deselectArticle}
+                  onGetSummaries={handleGetSummaries}
+                  selectedArticles={selectedArticles}
+                  researchQuery={researchQuery}
+                  isLoading={isLoading}
+                />
+              </div>
+            </main>
+          </div>
         );
 
       case 'summaries':
         return (
-          <ArticleSummaries
-            summaries={summaries}
-            suggestedQuestions={suggestedQuestions}
-            onSelectQuestion={handleSelectQuestion}
-            onStartChat={handleStartChat}
-            researchQuery={researchQuery}
-          />
+          <div className="min-h-screen bg-base-100">
+            <Navbar showHomeButton={true} onHomeClick={handleGoHome} />
+            <main className="py-8">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <ArticleSummaries
+                  summaries={summaries}
+                  suggestedQuestions={suggestedQuestions}
+                  onSelectQuestion={handleSelectQuestion}
+                  onStartChat={handleStartChat}
+                  researchQuery={researchQuery}
+                />
+              </div>
+            </main>
+          </div>
         );
 
       case 'chat':
         return (
-          <ChatInterface
-            chatHistory={chatHistory}
-            followUpQuestions={followUpQuestions}
-            onSendMessage={handleSendMessage}
-            selectedArticles={selectedArticles}
-            researchQuery={researchQuery}
-            isLoading={isLoading}
-          />
+          <div className="min-h-screen bg-base-100">
+            <Navbar showHomeButton={true} onHomeClick={handleGoHome} />
+            <main className="py-8">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <ChatInterface
+                  chatHistory={chatHistory}
+                  followUpQuestions={followUpQuestions}
+                  onSendMessage={handleSendMessage}
+                  selectedArticles={selectedArticles}
+                  researchQuery={researchQuery}
+                  isLoading={isLoading}
+                />
+              </div>
+            </main>
+          </div>
         );
 
       default:
         return (
-          <ResearchQuery
-            onGetRecommendations={handleGetRecommendations}
-            isLoading={isLoading}
-          />
+          <div className="min-h-screen flex flex-col relative">
+            {/* Content */}
+            <div className="relative z-10 flex flex-col min-h-screen">
+              <Navbar />
+              <HeroSection 
+                onSearch={handleGetRecommendations}
+                onCategorySelect={handleCategorySelect}
+              />
+            </div>
+          </div>
         );
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
-        onReset={resetResearch} 
-        systemStatus={systemStatus}
-      />
+    <div className="min-h-screen bg-base-100">
+      {/* Error Alert - Global */}
+      <ErrorAlert error={error} onDismiss={handleDismissError} />
       
-      <main className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Error Alert */}
-          <ErrorAlert error={error} onDismiss={handleDismissError} />
-          
-          {/* Loading Spinner */}
-          {isLoading && (
-            <LoadingSpinner 
-              message={
-                currentStep === 'research-query' ? "Finding relevant articles..." :
-                currentStep === 'recommendations' ? "Generating summaries..." :
-                currentStep === 'chat' ? "Processing your question..." :
-                "Loading..."
-              }
-            />
-          )}
-          
-          {/* Main Content */}
-          {!isLoading && renderCurrentStep()}
-        </div>
-      </main>
+      {/* Loading Spinner - Global */}
+      {isLoading && (
+        <LoadingSpinner 
+          message={
+            currentStep === 'research-query' ? "Finding relevant articles..." :
+            currentStep === 'recommendations' ? "Generating summaries..." :
+            currentStep === 'chat' ? "Processing your question..." :
+            "Loading..."
+          }
+        />
+      )}
       
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <p className="text-gray-500 text-sm">
-              NASA Space Biology AI Research Assistant
-            </p>
-            <p className="text-gray-400 text-xs mt-1">
-              Powered by OpenAI GPT and NASA Space Biology publications
-            </p>
-          </div>
-        </div>
-      </footer>
+      {/* Main Content */}
+      {!isLoading && renderCurrentStep()}
     </div>
   );
 };
