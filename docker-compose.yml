@@ -24,6 +24,7 @@ services:
       - ./ai/data:/app/data
       - ./ai/output:/app/output
       - ./ai/cache:/app/cache
+      - ./ai:/app/ai
       - ./backend:/app
     networks:
       - bionabu-network
@@ -69,27 +70,32 @@ services:
       retries: 3
       start_period: 40s
 
-  # Frontend React Service (Commented out - not dockerizing yet)
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   container_name: bionabu-frontend
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     - REACT_APP_API_BASE_URL=http://localhost:8000
-  #     - REACT_APP_API_VERSION=v1
-  #     - REACT_APP_ENVIRONMENT=development
-  #     - REACT_APP_DEBUG=true
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
-  #   networks:
-  #     - bionabu-network
-  #   depends_on:
-  #     - backend
-  #   restart: unless-stopped
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bionabu-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_APP_API_BASE_URL=${VITE_APP_API_BASE_URL:-http://localhost:8000}
+      - VITE_APP_API_VERSION=${VITE_APP_API_VERSION:-v1}
+      - VITE_APP_ENVIRONMENT=${VITE_APP_ENVIRONMENT:-development}
+      - VITE_APP_DEBUG=${VITE_APP_DEBUG:-true}
+      - VITE_APP_ENABLE_ANALYTICS=${VITE_APP_ENABLE_ANALYTICS:-false}
+      - VITE_APP_ENABLE_LOGGING=${VITE_APP_ENABLE_LOGGING:-true}
+      - VITE_APP_ENABLE_CHAT_HISTORY=${VITE_APP_ENABLE_CHAT_HISTORY:-true}
+      - VITE_APP_MAX_RECOMMENDATIONS=${VITE_APP_MAX_RECOMMENDATIONS:-10}
+      - VITE_APP_MAX_SUGGESTED_QUESTIONS=${VITE_APP_MAX_SUGGESTED_QUESTIONS:-8}
+      - VITE_APP_TYPING_INDICATOR_DELAY=${VITE_APP_TYPING_INDICATOR_DELAY:-1000}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - bionabu-network
+    depends_on:
+      - backend
+    restart: unless-stopped
 
 networks:
   bionabu-network:

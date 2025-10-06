@@ -14,32 +14,65 @@ This system provides a complete research workflow for space biology scientists:
 
 ```
 Bionabu/
-├── .env                  # 🎯 Centralized configuration
-├── env.example           # Configuration template
-├── ai/                   # 🤖 AI module (Python)
-│   ├── main.py          # CLI interface
-│   ├── research_flow.py # Research workflow
-│   ├── openai_client.py # OpenAI integration
-│   ├── data_processor.py# Data processing
-│   └── output/          # Analyzed articles
-├── backend/              # ⚡ FastAPI backend
-│   ├── main.py          # API server
-│   ├── ai_service.py    # AI integration
-│   ├── models.py        # Data models
-│   └── config.py        # Configuration
-├── frontend/             # ⚛️ React frontend
-│   ├── src/             # React components
-│   ├── package.json     # Dependencies
-│   └── public/          # Static assets
-└── README.md            # This file
+├── .env                    # 🎯 Centralized configuration
+├── env.example             # Configuration template
+├── cloudbuild.yaml         # Google Cloud Build pipeline
+├── deploy.ps1             # Deployment automation script
+├── docker-compose.yml     # Local development containers
+├── ai/                    # 🤖 AI Processing Module (Python)
+│   ├── main.py           # CLI interface & data processing
+│   ├── research_flow.py  # Research workflow logic
+│   ├── openai_client.py  # OpenAI integration
+│   ├── data_processor.py # Data processing utilities
+│   ├── research_cli.py   # Command-line interface
+│   ├── data/             # Raw NASA publication data
+│   └── output/           # Processed & analyzed articles
+├── backend/               # ⚡ AI Backend API (FastAPI)
+│   ├── main.py           # API server
+│   ├── ai_service.py     # AI integration service
+│   ├── models.py         # Pydantic data models
+│   ├── config.py         # Configuration management
+│   └── requirements.txt  # Python dependencies
+├── data/                  # 📊 Data Backend API (FastAPI)
+│   ├── app.py            # Data API server
+│   ├── requirements.txt  # Python dependencies
+│   ├── scripts/          # Data processing scripts
+│   └── data/             # Processed datasets
+└── frontend/              # ⚛️ React Frontend (Vite + TypeScript)
+    ├── src/              # React components & services
+    ├── package.json      # Node.js dependencies
+    ├── firebase.json     # Firebase hosting config
+    └── public/           # Static assets
 ```
+
+## 🛠️ Tech Stack
+
+### Backend Services
+- **AI Backend**: FastAPI + OpenAI GPT + Python 3.12
+- **Data Backend**: FastAPI + Gemini AI + Python 3.12
+- **AI Processing**: OpenAI API, LangChain, Pandas, NumPy
+
+### Frontend
+- **Framework**: React 19 + TypeScript + Vite
+- **Styling**: Tailwind CSS + DaisyUI
+- **Routing**: React Router v7
+- **Animations**: Framer Motion
+- **HTTP Client**: Axios
+
+### Infrastructure & Deployment
+- **Containerization**: Docker + Docker Compose
+- **Cloud Platform**: Google Cloud Platform
+- **CI/CD**: Google Cloud Build
+- **Hosting**: Google Cloud Run + Firebase Hosting
+- **Storage**: Google Cloud Storage
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Python 3.11+** with pip
-- **Node.js 16+** with npm
-- **OpenAI API Key** (get from [OpenAI Platform](https://platform.openai.com/api-keys))
+- **Python 3.12+** with pip
+- **Node.js 20+** with npm
+- **Docker** (optional, for containerized development)
+- **API Keys**: OpenAI API Key, Gemini API Key
 
 ### 1. Setup Configuration
 ```bash
@@ -49,34 +82,52 @@ cd Bionabu
 
 # Setup environment (ONE TIME ONLY)
 cp env.example .env
-# Edit .env and add your OpenAI API key
+# Edit .env with your API keys (see env.example for all variables)
 ```
 
-### 2. Prepare AI Data
+### 2. Local Development
+
+#### Option A: Docker Development (Recommended)
 ```bash
+# Start all services with Docker Compose
+docker-compose up --build
+
+# Access services:
+# Frontend: http://localhost:3000
+# AI Backend API: http://localhost:8000
+# Data Backend API: http://localhost:8081
+```
+
+#### Option B: Manual Development
+```bash
+# Prepare AI data
 cd ai
 pip install -r requirements.txt
 python main.py analyze
-```
 
-### 3. Start Backend
-```bash
+# Start AI Backend
 cd ../backend
 pip install -r requirements.txt
 python main.py
-```
 
-### 4. Start Frontend
-```bash
+# Start Data Backend (new terminal)
+cd ../data
+pip install -r requirements.txt
+python app.py
+
+# Start Frontend (new terminal)
 cd ../frontend
 npm install
-npm start
+npm run dev
 ```
 
-### 5. Access the Application
+### 3. Access the Application
 - **Frontend**: http://localhost:3000
-- **API Documentation**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
+- **AI Backend API**: http://localhost:8000/docs
+- **Data Backend API**: http://localhost:8081/docs
+- **Health Checks**: 
+  - AI Backend: http://localhost:8000/health
+  - Data Backend: http://localhost:8081/getAll
 
 ## 🎯 Features
 
@@ -89,106 +140,66 @@ npm start
 
 ### User Interface
 - **Modern Design**: Clean, responsive interface with Tailwind CSS
+- **Category Search**: Quick access buttons for Humans, Plants, Microbiology, Radiation, Technology, Mice, and Space research
 - **Real-time Updates**: Live chat with typing indicators
 - **Loading States**: Visual feedback during AI processing
 - **Error Handling**: User-friendly error messages and recovery
 
 ### Technical Features
+- **Dual Backend Architecture**: Separate AI and Data APIs for optimal performance
 - **Centralized Configuration**: Single `.env` file for all settings
 - **Modular Architecture**: Separate AI, backend, and frontend modules
-- **API-First Design**: RESTful API with comprehensive documentation
+- **API-First Design**: RESTful APIs with comprehensive documentation
 - **Production Ready**: Scalable, secure, and maintainable codebase
 
 ## 🔧 Configuration
 
 ### Environment Variables
-All configuration is centralized in the root `.env` file:
+All configuration is centralized in the root `.env` file. See `env.example` for a complete list of available variables including:
 
-```bash
-# =============================================================================
-# AI MODULE CONFIGURATION
-# =============================================================================
-OPENAI_API_KEY=your_openai_api_key_here    # REQUIRED
-OPENAI_MODEL=gpt-3.5-turbo
-MAX_CONCURRENT_REQUESTS=5
-REQUEST_DELAY=1.0
+- **AI Module**: OpenAI API configuration, processing settings
+- **Backend APIs**: Host/port configuration, CORS settings
+- **Frontend**: API endpoints, feature flags, UI settings
+- **Deployment**: Firebase tokens, logging levels
 
-# =============================================================================
-# BACKEND API CONFIGURATION  
-# =============================================================================
-API_HOST=0.0.0.0
-API_PORT=8000
-CORS_ORIGINS=http://localhost:3000
-LOG_LEVEL=INFO
+## 📊 API Architecture
 
-# =============================================================================
-# FRONTEND CONFIGURATION
-# =============================================================================
-REACT_APP_API_BASE_URL=http://localhost:8000
-REACT_APP_ENVIRONMENT=development
-REACT_APP_DEBUG=true
-```
-
-### Production Settings
-```bash
-# AI Module Production
-OPENAI_MODEL=gpt-4
-MAX_CONCURRENT_REQUESTS=3
-REQUEST_DELAY=2.0
-
-# Backend Production
-LOG_LEVEL=WARNING
-CORS_ORIGINS=https://yourdomain.com
-
-# Frontend Production
-REACT_APP_ENVIRONMENT=production
-REACT_APP_DEBUG=false
-REACT_APP_API_BASE_URL=https://your-api-domain.com
-```
-
-## 📊 API Endpoints
-
-### Health & Status
+### AI Backend API (`/api/v1/`)
 - `GET /health` - Health check
-- `GET /api/v1/research/status` - System status
-- `GET /api/v1/research/articles` - List available articles
+- `GET /research/status` - System status
+- `POST /research/recommendations` - Get article recommendations
+- `POST /research/summaries` - Get summaries and questions
+- `POST /research/chat` - Interactive chat
 
-### Research Flow
-1. `POST /api/v1/research/recommendations` - Get article recommendations
-2. `POST /api/v1/research/summaries` - Get summaries and questions
-3. `POST /api/v1/research/chat` - Interactive chat
+### Data Backend API (`/api/v1/`)
+- `GET /getAll` - Get all processed data
+- `GET /search` - Search with AI assistance
+- `GET /searchsinia` - Search without AI
+- `POST /stats/query-images` - Query relevant images
 
-### Example Usage
+## 🚀 Deployment
+
+### Google Cloud Platform Deployment
 ```bash
-# Get recommendations
-curl -X POST "http://localhost:8000/api/v1/research/recommendations" \
-  -H "Content-Type: application/json" \
-  -d '{"research_query": "microbiology in space", "top_k": 5}'
+# One-command deployment
+.\deploy.ps1 -ProjectId "your-project" -Region "us-central1"
 
-# Get summaries
-curl -X POST "http://localhost:8000/api/v1/research/summaries" \
-  -H "Content-Type: application/json" \
-  -d '{"research_query": "microbiology in space", "selected_articles": [...]}'
-
-# Chat with articles
-curl -X POST "http://localhost:8000/api/v1/research/chat" \
-  -H "Content-Type: application/json" \
-  -d '{"user_question": "What are the main challenges?", "research_query": "...", "selected_articles": [...], "chat_history": []}'
+# This will:
+# 1. Build Docker images for both backends
+# 2. Deploy to Google Cloud Run
+# 3. Build and deploy frontend to Firebase Hosting
+# 4. Configure all environment variables and CORS
 ```
 
-## 🎨 Frontend Components
+### Docker Deployment
+```bash
+# Production deployment with Docker
+docker-compose -f docker-compose.prod.yml up -d
 
-### Core Components
-- **Header**: System status and navigation
-- **ResearchQuery**: Initial research input with examples
-- **ArticleRecommendations**: Interactive article selection
-- **ArticleSummaries**: Detailed summaries and questions
-- **ChatInterface**: Real-time conversational interface
-
-### State Management
-- **ResearchContext**: Global state for research flow
-- **Reducer Pattern**: Predictable state updates
-- **API Integration**: Seamless backend communication
+# Or build individual services
+docker build -f backend/Dockerfile.prod -t ai-backend .
+docker build -f data/Dockerfile.prod -t data-backend .
+```
 
 ## 🔍 Development
 
@@ -196,105 +207,47 @@ curl -X POST "http://localhost:8000/api/v1/research/chat" \
 ```
 src/
 ├── components/           # React components
-│   ├── Header.js        # App header
-│   ├── ResearchQuery.js # Query input
-│   ├── ArticleRecommendations.js # Article selection
-│   ├── ArticleSummaries.js # Summaries display
-│   ├── ChatInterface.js # Chat interface
-│   ├── LoadingSpinner.js # Loading states
-│   └── ErrorAlert.js   # Error handling
-├── context/
-│   └── ResearchContext.js # Global state
-├── services/
-│   └── api.js          # API communication
-├── App.js              # Main application
-└── index.js            # Entry point
+│   ├── layout/          # Layout components (Navbar, Footer, etc.)
+│   ├── search/          # Search-related components
+│   └── common/          # Shared components
+├── context/             # React context for state management
+├── pages/               # Page components (Home, SearchPage)
+├── services/            # API communication layer
+└── assets/              # Static assets
 ```
 
 ### Available Scripts
 ```bash
-# Development
-npm start              # Start development server
-npm build              # Build for production
-npm test               # Run tests
+# Frontend Development
+npm run dev              # Start Vite dev server
+npm run build            # Build for production
+npm run preview          # Preview production build
 
-# Backend
-python main.py         # Start API server
+# Backend Development
+python main.py           # Start AI backend server
+python app.py            # Start data backend server
 python -m uvicorn main:app --reload # Development mode
 
 # AI Module
-python main.py analyze # Analyze articles
-python main.py process # Process raw data
+python main.py analyze   # Analyze articles
+python main.py process   # Process raw data
 ```
 
-## 🚀 Deployment
+## 🔒 Security & Performance
 
-### Backend Deployment
-```bash
-# Install production dependencies
-pip install gunicorn
-
-# Run with Gunicorn
-gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
-```
-
-### Frontend Deployment
-```bash
-# Build for production
-npm run build
-
-# Deploy the 'build' folder to your hosting service
-# (Netlify, Vercel, AWS S3, etc.)
-```
-
-### Docker Deployment
-```dockerfile
-# Backend Dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY backend/requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-# Frontend Dockerfile  
-FROM node:16-alpine
-WORKDIR /app
-COPY frontend/package*.json ./
-RUN npm install
-COPY frontend/ .
-RUN npm run build
-CMD ["npm", "start"]
-```
-
-## 🔒 Security
-
-### Best Practices
-- **API Key Protection**: OpenAI API key stored server-side only
+### Security Features
+- **API Key Protection**: All API keys stored server-side only
 - **Input Validation**: All inputs validated with Pydantic
 - **CORS Configuration**: Proper cross-origin settings
-- **Error Handling**: No sensitive data in error messages
 - **Rate Limiting**: Built-in API rate limiting
+- **Error Handling**: No sensitive data in error messages
 
-### Production Security
-- **HTTPS**: Use SSL certificates in production
-- **Environment Variables**: Secure configuration management
-- **Access Control**: Implement authentication as needed
-- **Monitoring**: Set up logging and monitoring
-
-## 📈 Performance
-
-### Optimization Features
+### Performance Optimizations
+- **Dual API Architecture**: Separated AI and data processing for better scaling
 - **Caching**: Analyzed articles cached for fast access
 - **Async Processing**: Non-blocking AI operations
-- **Rate Limiting**: Respect OpenAI API limits
-- **Code Splitting**: Optimized frontend bundle
-
-### Performance Metrics
-- **Recommendations**: ~30-60 seconds for 5 articles
-- **Summaries**: ~10-20 seconds per article
-- **Chat**: ~5-15 seconds per response
-- **Frontend**: Fast initial load with code splitting
+- **Code Splitting**: Optimized frontend bundle with Vite
+- **Container Optimization**: Multi-stage Docker builds
 
 ## 🐛 Troubleshooting
 
@@ -302,58 +255,52 @@ CMD ["npm", "start"]
 
 1. **"No analyzed articles available"**
    ```bash
-   cd ai
-   python main.py analyze
+   cd ai && python main.py analyze
    ```
 
-2. **"OpenAI API key not configured"**
-   - Check `.env` file exists in root directory
-   - Verify `OPENAI_API_KEY` is set correctly
+2. **"API key not configured"**
+   - Check `.env` file exists and contains required keys
+   - Verify API keys are valid and have proper permissions
 
-3. **"Backend connection failed"**
-   - Ensure backend is running on port 8000
-   - Check firewall settings
-   - Verify CORS configuration
+3. **"CORS policy error"**
+   - Ensure `CORS_ORIGINS` includes your frontend URL
+   - For production, use deployed URLs in configuration
 
-4. **"Frontend build errors"**
+4. **"Docker build failures"**
    ```bash
-   cd frontend
-   rm -rf node_modules package-lock.json
-   npm install
+   docker system prune -f  # Clean Docker cache
+   docker-compose down -v  # Remove volumes
+   docker-compose up --build  # Rebuild
    ```
-
-### Debug Mode
-```bash
-# Enable debug logging
-REACT_APP_DEBUG=true npm start
-LOG_LEVEL=DEBUG python main.py
-```
 
 ## 📚 Documentation
 
 ### API Documentation
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+- **AI Backend Swagger**: `http://localhost:8000/docs`
+- **Data Backend Swagger**: `http://localhost:8081/docs`
+- **API Health Checks**: Available at `/health` endpoints
 
 ### Code Documentation
 - **Inline Comments**: Comprehensive code documentation
-- **Type Hints**: Python type annotations
-- **PropTypes**: React component prop validation
+- **Type Hints**: Python type annotations throughout
+- **TypeScript**: Full type safety in frontend
+- **Component Documentation**: React components with proper prop types
 
 ## 🤝 Contributing
 
 ### Development Setup
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+3. Set up local development environment
+4. Make your changes
+5. Test with both Docker and manual setups
+6. Submit a pull request
 
 ### Code Style
 - **Python**: Follow PEP 8 guidelines
-- **JavaScript**: Use ESLint configuration
-- **React**: Functional components with hooks
-- **CSS**: Tailwind CSS utility classes
+- **TypeScript/React**: Use ESLint configuration
+- **Docker**: Follow multi-stage build patterns
+- **API Design**: RESTful principles with proper HTTP status codes
 
 ## 📄 License
 
@@ -363,9 +310,11 @@ This project is developed for the NASA Space Apps Challenge 2025.
 
 - **NASA Space Biology**: For providing the research data
 - **OpenAI**: For providing the AI capabilities
+- **Google Gemini**: For additional AI processing
 - **FastAPI**: For the excellent Python web framework
-- **React**: For the powerful frontend framework
+- **React + Vite**: For the modern frontend stack
 - **Tailwind CSS**: For the utility-first CSS framework
+- **Google Cloud Platform**: For the deployment infrastructure
 
 ---
 
