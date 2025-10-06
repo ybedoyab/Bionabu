@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+dotenv
+google.generativeai
+requests
+beautifulsoup4
+lxml
+trafilatura
+fitz
+pdfplumber
+tqdm
+regex
+pandas
+Pillow
+urllib3

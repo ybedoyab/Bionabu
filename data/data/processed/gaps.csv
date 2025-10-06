@@ -1,0 +1,16 @@
+exposure,outcome,count
+hypoxia,cardio,1
+hypoxia,gene expression,1
+hypoxia,immune,1
+radiation,neuro,1
+radiation,muscle,4
+microgravity,neuro,5
+radiation,immune,16
+microgravity,muscle,22
+radiation,gene expression,24
+microgravity,cardio,24
+microgravity,immune,31
+microgravity,gene expression,33
+microgravity,bone,69
+radiation,cardio,73
+radiation,bone,79

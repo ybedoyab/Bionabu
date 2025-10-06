@@ -1,0 +1,22 @@
+# Byte-code files
+*.pyc
+__pycache__/
+.env
+
+# Virtual environment
+venv/
+env/
+
+# IDE-specific files
+.idea/
+.vscode/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Data files and logs
+*.log
+*.sqlite3
+config.ini
