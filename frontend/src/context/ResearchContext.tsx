@@ -1,35 +1,31 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { apiService } from '../services/api';
+import type { ReactNode } from 'react';
+import { apiService, type Article, type RecommendationResponse, type SummaryResponse, type ChatResponse, type SystemStatus, type SuggestedQuestion } from '../services/api';
 
-// Initial state
-const initialState = {
-  // Current step in the research flow
-  currentStep: 'research-query', // 'research-query' | 'recommendations' | 'summaries' | 'chat'
-  
-  // Research query
-  researchQuery: '',
-  
-  // Step 1: Recommendations
-  recommendations: [],
-  selectedArticles: [],
-  
-  // Step 2: Summaries
-  summaries: null,
-  suggestedQuestions: [],
-  
-  // Step 3: Chat
-  chatHistory: [],
-  followUpQuestions: [],
-  
-  // UI state
-  isLoading: false,
-  error: null,
-  
-  // System status
-  systemStatus: null,
-};
+// Types
+export type ResearchStep = 'research-query' | 'recommendations' | 'summaries' | 'chat';
 
-// Action types
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  message: string;
+  timestamp?: Date;
+}
+
+export interface ResearchState {
+  currentStep: ResearchStep;
+  researchQuery: string;
+  recommendations: Article[];
+  selectedArticles: Article[];
+  summaries: SummaryResponse | null;
+  suggestedQuestions: SuggestedQuestion[];
+  chatHistory: ChatMessage[];
+  followUpQuestions: string[];
+  systemStatus: SystemStatus | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+// Action Types
 const ActionTypes = {
   SET_LOADING: 'SET_LOADING',
   SET_ERROR: 'SET_ERROR',
@@ -53,8 +49,23 @@ const ActionTypes = {
   RESET_RESEARCH: 'RESET_RESEARCH',
 };
 
+// Initial State
+const initialState: ResearchState = {
+  currentStep: 'research-query',
+  researchQuery: '',
+  recommendations: [],
+  selectedArticles: [],
+  summaries: null,
+  suggestedQuestions: [],
+  chatHistory: [],
+  followUpQuestions: [],
+  systemStatus: null,
+  isLoading: false,
+  error: null,
+};
+
 // Reducer
-const researchReducer = (state, action) => {
+const researchReducer = (state: ResearchState, action: any): ResearchState => {
   switch (action.type) {
     case ActionTypes.SET_LOADING:
       return { ...state, isLoading: action.payload, error: null };
@@ -72,6 +83,8 @@ const researchReducer = (state, action) => {
       return { 
         ...state, 
         recommendations: action.payload,
+        selectedArticles: [], // Clear previous selections
+        summaries: null, // Clear previous summaries
         currentStep: 'recommendations',
         isLoading: false,
         error: null
@@ -153,10 +166,23 @@ const researchReducer = (state, action) => {
 };
 
 // Context
-const ResearchContext = createContext();
+const ResearchContext = createContext<ResearchState & {
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  setResearchQuery: (query: string) => void;
+  getRecommendations: (query: string, topK?: number) => Promise<RecommendationResponse>;
+  selectArticle: (articleId: string) => void;
+  deselectArticle: (articleId: string) => void;
+  clearSelections: () => void;
+  getSummaries: (selectedArticles: Article[], researchQuery: string) => Promise<SummaryResponse>;
+  sendChatMessage: (userQuestion: string, selectedArticles: Article[], researchQuery: string, chatHistory: ChatMessage[]) => Promise<ChatResponse>;
+  selectSuggestedQuestion: (question: string) => void;
+  nextStep: (step: ResearchStep) => void;
+  resetResearch: () => void;
+} | null>(null);
 
 // Provider component
-export const ResearchProvider = ({ children }) => {
+export const ResearchProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(researchReducer, initialState);
 
   // Load system status on mount
@@ -175,48 +201,50 @@ export const ResearchProvider = ({ children }) => {
 
   // Action creators
   const actions = {
-    setLoading: (loading) => dispatch({ type: ActionTypes.SET_LOADING, payload: loading }),
-    setError: (error) => dispatch({ type: ActionTypes.SET_ERROR, payload: error }),
+    setLoading: (loading: boolean) => dispatch({ type: ActionTypes.SET_LOADING, payload: loading }),
+    setError: (error: string | null) => dispatch({ type: ActionTypes.SET_ERROR, payload: error }),
     
-    setResearchQuery: (query) => dispatch({ type: ActionTypes.SET_RESEARCH_QUERY, payload: query }),
+    setResearchQuery: (query: string) => dispatch({ type: ActionTypes.SET_RESEARCH_QUERY, payload: query }),
     
-    getRecommendations: async (query, topK = 5) => {
+    getRecommendations: async (query: string, topK: number = 5) => {
       dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       dispatch({ type: ActionTypes.SET_RESEARCH_QUERY, payload: query });
       try {
         const response = await apiService.getRecommendations(query, topK);
         dispatch({ type: ActionTypes.SET_RECOMMENDATIONS, payload: response.recommendations });
         return response;
-      } catch (error) {
+      } catch (error: any) {
         dispatch({ type: ActionTypes.SET_ERROR, payload: error.message });
         throw error;
       }
     },
     
-    selectArticle: (articleId) => dispatch({ type: ActionTypes.SELECT_ARTICLE, payload: articleId }),
-    deselectArticle: (articleId) => dispatch({ type: ActionTypes.DESELECT_ARTICLE, payload: articleId }),
+    selectArticle: (articleId: string) => dispatch({ type: ActionTypes.SELECT_ARTICLE, payload: articleId }),
+    deselectArticle: (articleId: string) => dispatch({ type: ActionTypes.DESELECT_ARTICLE, payload: articleId }),
     clearSelections: () => dispatch({ type: ActionTypes.CLEAR_SELECTIONS }),
     
-    getSummaries: async (selectedArticles, researchQuery) => {
+    getSummaries: async (selectedArticles: Article[], researchQuery: string) => {
       if (!researchQuery || researchQuery.trim().length === 0) {
         const error = new Error('Research query is required');
         dispatch({ type: ActionTypes.SET_ERROR, payload: error.message });
         throw error;
       }
-      
+
       dispatch({ type: ActionTypes.SET_LOADING, payload: true });
       try {
         const response = await apiService.getSummaries(selectedArticles, researchQuery);
+        console.log('getSummaries response:', response);
         dispatch({ type: ActionTypes.SET_SUMMARIES, payload: response });
         dispatch({ type: ActionTypes.SET_SUGGESTED_QUESTIONS, payload: response.suggested_questions });
         return response;
-      } catch (error) {
+      } catch (error: any) {
+        console.error('getSummaries error:', error);
         dispatch({ type: ActionTypes.SET_ERROR, payload: error.message });
         throw error;
       }
     },
     
-    sendChatMessage: async (userQuestion, selectedArticles, researchQuery, chatHistory) => {
+    sendChatMessage: async (userQuestion: string, selectedArticles: Article[], researchQuery: string, chatHistory: ChatMessage[]) => {
       try {
         const response = await apiService.chatWithArticles(
           userQuestion, 
@@ -230,19 +258,20 @@ export const ResearchProvider = ({ children }) => {
         dispatch({ type: ActionTypes.NEXT_STEP, payload: 'chat' });
         
         return response;
-      } catch (error) {
+      } catch (error: any) {
         dispatch({ type: ActionTypes.SET_ERROR, payload: error.message });
         throw error;
       }
     },
     
-    selectSuggestedQuestion: (question) => {
+    selectSuggestedQuestion: (question: string) => {
       dispatch({ type: ActionTypes.SET_RESEARCH_QUERY, payload: question });
     },
     
-    nextStep: (step) => dispatch({ type: ActionTypes.NEXT_STEP, payload: step }),
+    nextStep: (step: ResearchStep) => dispatch({ type: ActionTypes.NEXT_STEP, payload: step }),
     resetResearch: () => dispatch({ type: ActionTypes.RESET_RESEARCH }),
   };
+
 
   const value = {
     ...state,
@@ -264,5 +293,3 @@ export const useResearch = () => {
   }
   return context;
 };
-
-export default ResearchContext;

@@ -1,12 +1,21 @@
-import React, { useState } from 'react';
-import { Search, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 
-// NASA-themed Loading Animation Component
-const SearchLoadingAnimation = ({ onCancel }) => {
+interface LoadingAnimationProps {
+  message?: string;
+  isFullScreen?: boolean;
+}
+
+const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ 
+  message = "AI is working...", 
+  isFullScreen = false 
+}) => {
+  const containerClass = isFullScreen 
+    ? "fixed inset-0 z-50 flex items-center justify-center bg-base-100/80 backdrop-blur-sm"
+    : "min-h-screen flex items-center justify-center bg-gradient-to-br from-base-100 via-base-200 to-base-100";
+
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-base-100/80 backdrop-blur-sm"
+      className={containerClass}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -110,7 +119,7 @@ const SearchLoadingAnimation = ({ onCancel }) => {
           transition={{ delay: 0.3 }}
         >
           <h3 className="text-lg font-semibold text-primary mb-2">
-            Analyzing Research...
+            {message}
           </h3>
         </motion.div>
 
@@ -133,16 +142,6 @@ const SearchLoadingAnimation = ({ onCancel }) => {
             />
           ))}
         </div>
-
-        {/* Cancel Button */}
-        <motion.button
-          onClick={onCancel}
-          className="btn btn-sm btn-ghost mt-4"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Cancel
-        </motion.button>
 
         {/* Floating Particles */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -172,94 +171,4 @@ const SearchLoadingAnimation = ({ onCancel }) => {
   );
 };
 
-const SearchBar = ({ onSearch, defaultValue = '', placeholder = "Search NASA bioscience experiments..." }) => {
-  const [query, setQuery] = useState(defaultValue);
-  const [isSearching, setIsSearching] = useState(false);
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (onSearch && query.trim()) {
-      setIsSearching(true);
-      
-      try {
-        await onSearch(query);
-      } finally {
-        setIsSearching(false);
-      }
-    }
-  };
-
-  const handleClear = () => {
-    setQuery('');
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch(e);
-    }
-  };
-
-  const handleCancel = () => {
-    setIsSearching(false);
-  };
-
-  return (
-    <>
-      <form onSubmit={handleSearch} className="w-full max-w-2xl">
-        <motion.div 
-          className="relative flex items-center w-full search-bar-glass rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-          whileFocus={{ scale: 1.005 }}
-          transition={{ duration: 0.3 }}
-        >
-          <motion.input
-            type="text"
-            placeholder={placeholder}
-            className="flex-1 px-6 py-4 text-base lg:text-lg bg-transparent border-0 outline-none placeholder:text-base-content/60"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isSearching}
-          />
-          
-          {query && !isSearching && (
-            <motion.button
-              type="button"
-              onClick={handleClear}
-              className="p-2 hover:bg-base-300 rounded-full transition-colors duration-300 mr-2"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.3 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              aria-label="Clear search"
-            >
-              <X className="w-5 h-5 text-base-content/60 hover:text-base-content transition-colors duration-300" />
-            </motion.button>
-          )}
-          
-          <motion.button 
-            type="submit"
-            className="p-3 hover:bg-base-300 rounded-full transition-colors duration-300 mr-1"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ duration: 0.3 }}
-            aria-label="Search"
-            disabled={isSearching}
-          >
-            <Search className={`w-5 h-5 transition-colors duration-300 ${
-              isSearching ? 'text-primary animate-pulse' : 'text-base-content/60 hover:text-primary'
-            }`} />
-          </motion.button>
-        </motion.div>
-      </form>
-
-      {/* Loading Animation Overlay */}
-      <AnimatePresence>
-        {isSearching && <SearchLoadingAnimation onCancel={handleCancel} />}
-      </AnimatePresence>
-    </>
-  );
-};
-
-export default SearchBar;
+export default LoadingAnimation;
