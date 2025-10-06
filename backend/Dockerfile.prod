@@ -1,0 +1,48 @@
+# Production Dockerfile for Google Cloud Run
+FROM python:3.12-slim
+
+# Set working directory
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PORT=8080
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY backend/requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY backend/ .
+
+# Copy AI module from parent directory
+COPY ai/ /app/ai
+
+# Create necessary directories
+RUN mkdir -p /app/data /app/output /app/cache
+
+# Copy analyzed articles to output directory
+COPY backend/output/analysis_checkpoint.json /app/output/analysis_checkpoint.json
+COPY backend/output/processed_articles.json /app/output/processed_articles.json
+
+# Expose port (Cloud Run uses PORT environment variable)
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Run the application
+CMD exec uvicorn main:app --host 0.0.0.0 --port 8080 --workers 1

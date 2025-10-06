@@ -30,6 +30,11 @@ os.environ.update({
 })
 
 # Import AI modules after setting environment
+import sys
+ai_path = str(Path(__file__).parent / "ai")
+if ai_path not in sys.path:
+    sys.path.insert(0, ai_path)
+
 from openai_client import OpenAIClient
 from research_flow import ResearchFlow
 

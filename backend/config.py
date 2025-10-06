@@ -20,7 +20,7 @@ class Settings:
     """Application settings."""
     
     # API Configuration
-    API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
+    API_HOST: str = os.getenv("API_HOST", "127.0.0.1")
     API_PORT: int = int(os.getenv("API_PORT", "8000"))
     API_V1_STR: str = os.getenv("API_V1_STR", "/api/v1")
     PROJECT_NAME: str = "NASA Space Biology AI API"
@@ -38,12 +38,13 @@ class Settings:
         "http://localhost:3001",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
+        "*",  # Allow all origins for remote access
     ]
     
     # Data Configuration (loaded from centralized .env)
-    DATA_DIR: str = os.getenv("DATA_DIR", "../ai/data")
-    OUTPUT_DIR: str = os.getenv("OUTPUT_DIR", "../ai/output")
-    CACHE_DIR: str = os.getenv("CACHE_DIR", "../ai/cache")
+    DATA_DIR: str = os.getenv("DATA_DIR", "data")
+    OUTPUT_DIR: str = os.getenv("OUTPUT_DIR", "output")
+    CACHE_DIR: str = os.getenv("CACHE_DIR", "cache")
     
     # Processing Configuration (loaded from ai/.env)
     MAX_CONCURRENT_REQUESTS: int = int(os.getenv("MAX_CONCURRENT_REQUESTS", "5"))
